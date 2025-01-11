@@ -59,8 +59,8 @@ ls /dev/spidev*
 Install the necessary crates in your `Cargo.toml`:
 ```toml
 [dependencies]
-embedded-hal = "0.2"
-linux-embedded-hal = "0.6"
+embedded-hal = "1.0.0"
+linux-embedded-hal = "0.4"
 ```
 
 ---
@@ -102,43 +102,86 @@ src/
 Here’s an example `main.rs` that demonstrates how to use the driver:
 
 ```rust
-use crate::imu::{IMU, Accelerometer, Gyroscope};
-use crate::spi_core::SpiCore;
-use linux_embedded_hal::Spidev;
+use icm_20948_driver::imu::{Accelerometer, Gyroscope, IMU};
+use icm_20948_driver::spi_core::SpiCore;
+use linux_embedded_hal::spidev::{Spidev, SpidevOptions, SpiModeFlags};
+use linux_embedded_hal::SpidevBus;
 use std::sync::{Arc, Mutex};
+use std::thread;
+use std::time::{Duration, Instant};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Step 1: Initialize SPI communication
-    let spidev = Spidev::open("/dev/spidev0.0")?;
-    let spi_core = Arc::new(Mutex::new(SpiCore::new(spidev)));
+    // Step 1: Create and configure the SPI device
+    let mut spidev = Spidev::open("/dev/spidev0.0").expect("Failed to open SPI device");
+    spidev
+        .configure(
+            &SpidevOptions::new()
+                .bits_per_word(8)
+                .max_speed_hz(1_000_000) // 1 MHz
+                .mode(SpiModeFlags::SPI_MODE_0)
+                .build(),
+        )
+        .expect("Failed to configure SPI device");
 
-    // Step 2: Initialize the IMU
-    let mut imu = IMU::new(spi_core.clone());
-    imu.initialize()?;
+    // Step 2: Wrap Spidev in a SpidevBus
+    let spidev_bus = SpidevBus::from(linux_embedded_hal::SpidevBus(spidev));
 
-    // Step 3: Create instances of Accelerometer and Gyroscope
-    let mut accelerometer = Accelerometer::new(spi_core.clone());
-    let mut gyroscope = Gyroscope::new(spi_core.clone());
+    // Step 3: Create an Arc<Mutex<SpiCore>> to share SPI access
+    let spi = Arc::new(Mutex::new(SpiCore::new(spidev_bus)));
 
-    // Step 4: Read data from accelerometer
-    let accel_data = accelerometer.read()?;
-    println!("Acceleration: x = {}, y = {}, z = {}", accel_data[0], accel_data[1], accel_data[2]);
+    // Step 4: Create and initialize the central IMU
+    let mut imu = IMU::new(Arc::clone(&spi));
+    imu.initialize().expect("Failed to initialize IMU");
 
-    // Step 5: Read data from gyroscope
-    let gyro_data = gyroscope.read()?;
-    println!("Angular velocity: x = {}, y = {}, z = {}", gyro_data[0], gyro_data[1], gyro_data[2]);
+    // Step 5: Create accelerometer, gyroscope
+    let mut accel = Accelerometer::new(Arc::clone(&spi));
+    let mut gyro = Gyroscope::new(Arc::clone(&spi));
 
-    Ok(())
+    // Step 6: Main loop to read data
+    let mut _loop_count = 0; // Loop counter
+
+    loop {
+        let loop_start = Instant::now();
+
+        // Accelerometer Logic
+        match accel.read() {
+            Ok(accel_data) => println!(
+                "Accelerometer - X: {:.2}, Y: {:.2}, Z: {:.2}",
+                accel_data[0], accel_data[1], accel_data[2]
+            ),
+            Err(e) => eprintln!("Failed to read accelerometer data: {:?}", e),
+        }
+    
+        // Gyroscope Logic
+        match gyro.read() {
+            Ok(gyro_data) => println!(
+                "Gyroscope - X: {:.2}, Y: {:.2}, Z: {:.2}",
+                gyro_data[0], gyro_data[1], gyro_data[2]
+            ),
+            Err(e) => eprintln!("Failed to read gyroscope data: {:?}", e),
+        }
+    
+        // Maintain 2.5ms loop duration
+        let elapsed = loop_start.elapsed();
+        if elapsed < Duration::from_micros(2500) {
+            thread::sleep(Duration::from_micros(2500) - elapsed);
+        }
+    
+        _loop_count += 1;
+    }
+                     
 }
+
+
 ```
 
 ---
 
 ## **Features**
 - **Portability**: 
-  - Built on `embedded-hal`, the driver works with any platform that supports the standard HAL traits.
+  - Built on `embedded-hal`, the driver works with any platform that supports the standard HAL traits including other Linux platforms (Nvidia Jetson series computers) or compatible microcontrollers (STM32, Arduino, etc.)
 - **Thread-Safe**:
-  - Shared SPI access is protected using `Arc<Mutex<SpiCore>>`.
+  - Shared SPI access is protected using `Arc<Mutex<SpiCore>>`. SPI communication is not inherently threadsafe so this driver utilizes Rust's borrow checker to guarantee only 1 abstraction accesses the SPI bus at a time.
 - **Modular Design**:
   - Separate abstractions for SPI communication, initialization, and individual sensors.
 - **Scalable**:
