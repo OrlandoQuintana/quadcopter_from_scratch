@@ -1,0 +1,189 @@
+# **ROS2 IMU Publisher Node**
+
+## **Overview**
+This project implements a **ROS2 node** in Rust that reads data from the **ICM-20948 IMU** and publishes it to a ROS2 topic `/raw_imu`. The node uses a custom Rust driver (`icm-20948-driver`) to interface with the IMU over SPI and follows the `sensor_msgs/msg/Imu` message format for publishing.
+
+The node provides:
+- Real-time accelerometer and gyroscope data.
+- Thread-safe SPI communication.
+- Modular abstractions for IMU initialization, accelerometer, and gyroscope-specific logic.
+
+---
+
+## **Features**
+1. **Custom Rust Driver Integration**:
+   - Utilizes the `icm-20948-driver` crate, which provides modular abstractions for initializing and accessing data from the IMU sensors.
+   - Handles SPI communication via the `embedded-hal` and `linux-embedded-hal` crates.
+
+2. **ROS2 Sensor Messages**:
+   - Publishes data in the standard `sensor_msgs/msg/Imu` format, which is widely compatible with robotics applications.
+
+3. **High-Frequency Publishing**:
+   - Publishes IMU data to the topic `/raw_imu` at approximately **100 Hz**.
+
+4. **Thread-Safe Design**:
+   - Uses `Arc<Mutex<SpiCore>>` to ensure safe concurrent access to the SPI bus.
+
+---
+
+## **Requirements**
+
+### **Software**
+- **Rust** (minimum version 1.65):
+  - Install Rust using [rustup](https://rustup.rs/):
+    ```bash
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+    ```
+- **ROS2 Humble** or newer:
+  - Follow the [official installation guide](https://docs.ros.org/en/humble/Installation.html).
+
+- **Enable SPI on the Raspberry Pi**:
+  1. Open the Raspberry Pi configuration tool:
+     ```bash
+     sudo raspi-config
+     ```
+  2. Navigate to **Interfacing Options → SPI** and enable it.
+
+  3. Verify SPI devices are available:
+     ```bash
+     ls /dev/spidev*
+     ```
+     Ensure you see `/dev/spidev0.0`.
+
+### **Hardware**
+- **ICM-20948 IMU**: A 9-axis inertial measurement unit.
+- **Raspberry Pi**: Any model with SPI support (e.g., Raspberry Pi 4, Raspberry Pi Zero W).
+
+### **Wiring**
+| **Raspberry Pi Pin** | **ICM-20948 Pin** | **Function**            |
+|-----------------------|-------------------|-------------------------|
+| GPIO 10 (MOSI)        | SDI              | Master Out, Slave In    |
+| GPIO 9 (MISO)         | SDO              | Master In, Slave Out    |
+| GPIO 11 (SCLK)        | SCL              | Serial Clock            |
+| GPIO 8 (CE0)          | CS               | Chip Select             |
+| GND                   | GND              | Ground                  |
+| 3.3V                  | VDD              | Power Supply (3.3V)     |
+
+---
+
+## **Crates Used**
+1. **`rclrs`**:
+   - Provides ROS2 bindings for Rust.
+   - Used to create nodes, publishers, and interact with ROS2 topics.
+
+2. **`icm-20948-driver`**:
+   - A custom Rust crate for interfacing with the ICM-20948 IMU.
+   - Handles IMU initialization and sensor-specific functionality (e.g., reading accelerometer and gyroscope data).
+
+3. **`linux-embedded-hal`**:
+   - Implements the `embedded-hal` traits for Linux systems.
+   - Provides SPI communication via the Raspberry Pi's `/dev/spidev0.0`.
+
+4. **Standard Sync Utilities**:
+   - Uses `Arc` and `Mutex` for thread-safe access to the shared SPI bus.
+
+Add these dependencies to your `Cargo.toml`:
+```toml
+[dependencies]
+rclrs = "0.10"
+linux-embedded-hal = "0.6"
+icm-20948-driver = { path = "../path-to-your-driver" }
+```
+
+---
+
+## **Node Details**
+### **Node Name**
+- `imu_publisher`
+
+### **Published Topic**
+- **`/raw_imu`**
+  - Message type: `sensor_msgs/msg/Imu`.
+  - Contains:
+    - `linear_acceleration`: Acceleration in m/s² along X, Y, and Z axes.
+    - `angular_velocity`: Angular velocity in rad/s along X, Y, and Z axes.
+
+### **Viewing the Published Data**
+To see the data being published:
+1. Open a terminal and run:
+   ```bash
+   ros2 topic echo /raw_imu
+   ```
+2. Example output:
+   ```yaml
+   header:
+     stamp:
+       sec: 1635877468
+       nanosec: 123456789
+     frame_id: ''
+   orientation: {x: 0.0, y: 0.0, z: 0.0, w: 0.0}
+   angular_velocity: {x: 0.01, y: -0.02, z: 0.05}
+   linear_acceleration: {x: 0.98, y: 0.02, z: 9.81}
+   ```
+
+---
+
+## **How to Build and Run**
+
+### **Build the Node**
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-repo/ros2-imu-publisher.git
+   cd ros2-imu-publisher
+   ```
+
+2. Build the project:
+   ```bash
+   cargo build --release
+   ```
+
+### **Run the Node**
+Start the ROS2 IMU Publisher node:
+```bash
+cargo run --release
+```
+
+---
+
+## **Code Overview**
+### **`IMUPublisherNode`**
+A custom struct encapsulating:
+- A ROS2 node (`imu_publisher`).
+- A publisher for the `/raw_imu` topic.
+- The IMU components (`IMU`, `Accelerometer`, `Gyroscope`).
+
+### **Initialization**
+- The `IMUPublisherNode::new` method initializes the ROS2 node, SPI bus, and IMU components.
+- IMU initialization is explicitly handled via `IMUPublisherNode::initialize_imu`.
+
+### **Data Publishing**
+- Reads data from the accelerometer and gyroscope using the custom driver.
+- Publishes IMU data in `sensor_msgs/msg/Imu` format via the `/raw_imu` topic.
+
+---
+
+## **Main Components**
+### **IMU Initialization**
+The IMU is initialized with the following steps:
+1. Configure power management to enable the accelerometer and gyroscope.
+2. Set sensitivity for:
+   - Accelerometer: ±2g.
+   - Gyroscope: ±250 dps.
+3. Configure low-pass filters for noise reduction.
+
+### **Publishing Logic**
+The `publish_data` method:
+1. Reads data from the accelerometer (`linear_acceleration`) and gyroscope (`angular_velocity`).
+2. Populates the `ImuMsg` with sensor data.
+3. Publishes the message to the `/raw_imu` topic.
+
+---
+
+## **Future Enhancements**
+1. Add support for the ICM-20948 magnetometer.
+2. Implement additional configuration options for IMU sensitivity and filters.
+3. Integrate sensor fusion algorithms for roll, pitch, and yaw estimation.
+
+---
+
+This `README.md` is fully formatted and ready to paste into your project. You can copy and paste it directly into your text editor or GitHub repository without any formatting issues.
