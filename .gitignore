@@ -1,0 +1,11 @@
+# Ignore ROS2 build, install, and log directories
+drone_pi_ws/build/
+drone_pi_ws/install/
+drone_pi_ws/log/
+
+# Ignore unnecessary ROS2 and Rust folders
+drone_pi_ws/src/ros2/
+drone_pi_ws/src/ros2_rust/
+
+# Ignore Cargo build artifacts
+target/
