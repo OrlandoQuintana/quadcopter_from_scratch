@@ -157,6 +157,9 @@ The quadcopter system is modular, with individual ROS2 nodes performing specific
 4. **Flight Simulation**:
    - Use Gazebo or similar simulators to test the quadcopter's behavior in a virtual environment.
 
+5. **Hardware Upgrades**:
+   - Move flight controller to a dedicated microcontroller for better real time performance. Upgrade flight computer from a Raspberry Pi to a high performance GPU based Nvidia Jetson series computer for higher level robotics applications like real time SLAM, computer vision, AI/ML, and more.
+
 ---
 
 ## **Conclusion**
