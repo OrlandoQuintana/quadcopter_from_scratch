@@ -27,10 +27,12 @@ where
         const ACCEL_SENSITIVITY: f32 = 16384.0; // For +/- 2g sensitivity
         const GRAVITY: f32 = 9.8; // Acceleration due to gravity in m/s²
 
+        //ICM-20948's x/y/z orientation needs to be modified to match the orientation that is conventionally
+        //expected in Extended Kalman Filters. (EKF) Swap x and y, make z negative
         Ok([
-            (raw_data[0] as f32 / ACCEL_SENSITIVITY) * GRAVITY,
             (raw_data[1] as f32 / ACCEL_SENSITIVITY) * GRAVITY,
-            (raw_data[2] as f32 / ACCEL_SENSITIVITY) * GRAVITY,
+            (raw_data[0] as f32 / ACCEL_SENSITIVITY) * GRAVITY,
+            -(raw_data[2] as f32 / ACCEL_SENSITIVITY) * GRAVITY,
         ])
     }
     

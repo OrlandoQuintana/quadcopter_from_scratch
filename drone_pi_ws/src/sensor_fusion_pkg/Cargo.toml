@@ -1,0 +1,13 @@
+[package]
+name = "sensor_fusion_pkg"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name="orientation_publisher"
+path="src/orientation_publisher.rs"
+
+[dependencies]
+rclrs = "*"
+std_msgs = "*"
+sensor_msgs = { path = "/home/opq/quadcopter_from_scratch/drone_pi_ws/install/sensor_msgs/share/sensor_msgs/rust" }

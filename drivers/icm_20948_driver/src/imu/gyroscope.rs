@@ -26,10 +26,12 @@ where
         const GYRO_SENSITIVITY: f32 = 131.0; // For +/- 250 dps sensitivity
         const DEG_TO_RAD: f32 = std::f32::consts::PI / 180.0; // Conversion factor from degrees to radians
 
+        //ICM-20948's x/y/z orientation needs to be modified to match the orientation that is conventionally
+        //expected in Extended Kalman Filters. (EKF) Swap x and y, make z negative
         Ok([
-            (raw_data[0] as f32 / GYRO_SENSITIVITY) * DEG_TO_RAD,
             (raw_data[1] as f32 / GYRO_SENSITIVITY) * DEG_TO_RAD,
-            (raw_data[2] as f32 / GYRO_SENSITIVITY) * DEG_TO_RAD,
+            (raw_data[0] as f32 / GYRO_SENSITIVITY) * DEG_TO_RAD,
+            -(raw_data[2] as f32 / GYRO_SENSITIVITY) * DEG_TO_RAD,
         ])
     }
 }

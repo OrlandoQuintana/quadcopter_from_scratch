@@ -1,42 +1,52 @@
-/// Creates a SimplePublisherNode, initializes a node and publisher, and provides
-/// methods to publish a simple "Hello World" message on a loop in separate threads.
-use rclrs::{create_node, Context, Node, Publisher, RclrsError, QOS_PROFILE_DEFAULT};
-use std::{env, sync::Arc, thread, time::Duration};
+use rclrs::{create_node, Context, Node, RclrsError, Subscription, QOS_PROFILE_DEFAULT};
+use std::{
+    env,
+    sync::{Arc, Mutex},
+    thread,
+    time::Duration,
+};
 use std_msgs::msg::String as StringMsg;
-/// SimplePublisherNode struct contains node and publisher members.
-/// Used to initialize a ROS 2 node and publisher, and publish messages.
-
-//use sensor_msgs::msg::Imu;
-
-
-struct SimplePublisherNode {
+pub struct SimpleSubscriptionNode {
     node: Arc<Node>,
-    publisher: Arc<Publisher<StringMsg>>,
+    _subscriber: Arc<Subscription<StringMsg>>,
+    data: Arc<Mutex<Option<StringMsg>>>,
 }
-impl SimplePublisherNode {
+impl SimpleSubscriptionNode {
     fn new(context: &Context) -> Result<Self, RclrsError> {
-        let node = create_node(context, "simple_publisher").unwrap();
-        let publisher = node
-            .create_publisher("publish_hello", QOS_PROFILE_DEFAULT)
+        let node = create_node(context, "simple_subscription").unwrap();
+        let data: Arc<Mutex<Option<StringMsg>>> = Arc::new(Mutex::new(None));
+        let data_mut: Arc<Mutex<Option<StringMsg>>> = Arc::clone(&data);
+        let _subscriber = node
+            .create_subscription::<StringMsg, _>(
+                "publish_hello",
+                QOS_PROFILE_DEFAULT,
+                move |msg: StringMsg| {
+                    *data_mut.lock().unwrap() = Some(msg);
+                },
+            )
             .unwrap();
-        Ok(Self { node, publisher })
+        Ok(Self {
+            node,
+            _subscriber,
+            data,
+        })
     }
-    fn publish_data(&self, increment: i32) -> Result<i32, RclrsError> {
-        let msg: StringMsg = StringMsg {
-            data: format!("Hello World {}", increment),
-        };
-        self.publisher.publish(msg).unwrap();
-        Ok(increment + 1_i32)
+    fn data_callback(&self) -> Result<(), RclrsError> {
+        if let Some(data) = self.data.lock().unwrap().as_ref() {
+            println!("{}", data.data);
+        } else {
+            println!("No message available yet.");
+        }
+        Ok(())
     }
 }
 fn main() -> Result<(), RclrsError> {
     let context = Context::new(env::args()).unwrap();
-    let publisher = Arc::new(SimplePublisherNode::new(&context).unwrap());
-    let publisher_other_thread = Arc::clone(&publisher);
-    let mut count: i32 = 0;
+    let subscription = Arc::new(SimpleSubscriptionNode::new(&context).unwrap());
+    let subscription_other_thread = Arc::clone(&subscription);
     thread::spawn(move || loop {
         thread::sleep(Duration::from_millis(1000));
-        count = publisher_other_thread.publish_data(count).unwrap();
+        subscription_other_thread.data_callback().unwrap()
     });
-    rclrs::spin(publisher.node.clone())
+    rclrs::spin(subscription.node.clone())
 }
