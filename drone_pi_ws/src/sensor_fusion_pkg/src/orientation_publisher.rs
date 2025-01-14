@@ -1,5 +1,7 @@
 use rclrs::{create_node, Context, Node, RclrsError, Subscription, Publisher, QOS_PROFILE_DEFAULT};
+use rust_ekf::{EKF, GRAVITY};
 use sensor_msgs::msg::Imu;
+use geometry_msgs::msg::Quaternion;
 use std::{
     env,
     sync::{Arc, Mutex},
@@ -10,23 +12,21 @@ use std::{
 pub struct OrientationPublisherNode {
     node: Arc<Node>,
     _subscriber: Arc<Subscription<Imu>>,
-    _publisher: Arc<Publisher<Imu>>,
+    _publisher: Arc<Publisher<Quaternion>>, // Change to publish Quaternion
     data: Arc<Mutex<Option<Imu>>>,
+    ekf: Mutex<EKF>, // Add EKF instance
 }
 
 impl OrientationPublisherNode {
     fn new(context: &Context) -> Result<Self, RclrsError> {
-        // Core ROS2 node
         let node = create_node(context, "orientation_publisher").unwrap();
 
-        // Shared data for storing IMU messages
         let data: Arc<Mutex<Option<Imu>>> = Arc::new(Mutex::new(None));
         let data_mut = Arc::clone(&data);
 
-        // Subscriber setup
         let _subscriber = node
             .create_subscription::<Imu, _>(
-                "/raw_imu", // Topic name to subscribe to
+                "/raw_imu",
                 QOS_PROFILE_DEFAULT,
                 move |msg: Imu| {
                     *data_mut.lock().unwrap() = Some(msg);
@@ -34,57 +34,88 @@ impl OrientationPublisherNode {
             )
             .unwrap();
 
-        // Publisher setup
         let _publisher = node
-            .create_publisher::<Imu>(
-                "/estimated_orientation", // Topic name to publish to
+            .create_publisher::<Quaternion>(
+                "/estimated_orientation",
                 QOS_PROFILE_DEFAULT,
             )
             .unwrap();
 
-        
-
-        // Return the initialized struct
         Ok(Self {
             node,
             _subscriber,
             _publisher,
             data,
+            ekf: Mutex::new(EKF::new()), // Initialize EKF
         })
     }
 
     fn data_callback(&self) -> Result<(), RclrsError> {
         if let Some(data) = self.data.lock().unwrap().as_ref() {
-            println!("Accel X: {}", data.linear_acceleration.x as f32);
-            println!("Accel Y: {}", data.linear_acceleration.y as f32);
-            println!("Accel Z:{}", data.linear_acceleration.z as f32);
-            println!("Gyro X: {}", data.angular_velocity.x as f32);
-            println!("Gyro Y: {}", data.angular_velocity.y as f32);
-            println!("Gyro Z: {}", data.angular_velocity.z as f32);
-        } else {
-            println!("No message available yet.");
+            // Extract IMU data
+            let gyro_data = [
+                data.angular_velocity.x as f64,
+                data.angular_velocity.y as f64,
+                data.angular_velocity.z as f64,
+            ];
+            let accel_data = [
+                data.linear_acceleration.x as f64,
+                data.linear_acceleration.y as f64,
+                data.linear_acceleration.z as f64,
+            ];
+
+            // Lock and update EKF
+            let mut ekf = self.ekf.lock().unwrap();
+            ekf.predict(gyro_data);
+            ekf.update(accel_data);
+
+            // Get updated state
+            let state = ekf.get_state();
+            let roll = state[0]; // Roll angle
+            let pitch = state[1]; // Pitch angle
+            let yaw = state[2]; //yaw angle
+
+            // Convert roll and pitch to quaternion
+            let quaternion = self.euler_to_quaternion(roll, pitch, yaw);
+
+            // Publish quaternion
+            self._publisher.publish(&quaternion)?;
+
+            println!("Roll angle: {:.3}, Pitch angle: {:.3}, Yaw angle: {:.3}", roll, pitch, yaw);
         }
         Ok(())
-    } 
+    }
 
-
+    fn euler_to_quaternion(&self, roll: f64, pitch: f64, yaw: f64) -> Quaternion {
+        // Compute trigonometric terms
+        let cy = (yaw / 2.0).cos();  // Cosine of half yaw
+        let sy = (yaw / 2.0).sin();  // Sine of half yaw
+        let cr = (roll / 2.0).cos(); // Cosine of half roll
+        let sr = (roll / 2.0).sin(); // Sine of half roll
+        let cp = (pitch / 2.0).cos(); // Cosine of half pitch
+        let sp = (pitch / 2.0).sin(); // Sine of half pitch
+    
+        // Compute quaternion components
+        Quaternion {
+            x: sr * cp * cy - cr * sp * sy,
+            y: cr * sp * cy + sr * cp * sy,
+            z: cr * cp * sy - sr * sp * cy,
+            w: cr * cp * cy + sr * sp * sy,
+        }
+    }
+    
 }
 
 fn main() -> Result<(), RclrsError> {
-    // ROS2 context initialization
     let context = Context::new(env::args()).unwrap();
 
-    // Create the filtered IMU node
     let orientation_publisher_node = Arc::new(OrientationPublisherNode::new(&context).unwrap());
     let orientation_publisher_node_other_thread = Arc::clone(&orientation_publisher_node);
 
-    // Spawn a thread to process and publish data periodically
     thread::spawn(move || loop {
         thread::sleep(Duration::from_millis(10)); // 100 Hz loop
         orientation_publisher_node_other_thread.data_callback().unwrap();
-        println!("test");
     });
 
-    // Spin the node
     rclrs::spin(orientation_publisher_node.node.clone())
 }

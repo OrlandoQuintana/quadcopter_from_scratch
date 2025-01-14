@@ -11,3 +11,5 @@ path="src/orientation_publisher.rs"
 rclrs = "*"
 std_msgs = "*"
 sensor_msgs = { path = "/home/opq/quadcopter_from_scratch/drone_pi_ws/install/sensor_msgs/share/sensor_msgs/rust" }
+geometry_msgs = { path = "/home/opq/quadcopter_from_scratch/drone_pi_ws/install/geometry_msgs/share/geometry_msgs/rust" }
+rust-ekf = { git = "https://github.com/OrlandoQuintana/rust-ekf.git" }

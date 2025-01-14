@@ -4,9 +4,6 @@ path = "/home/opq/quadcopter_from_scratch/drone_pi_ws/install/rclrs/share/rclrs/
 [patch.crates-io.rosidl_runtime_rs]
 path = "/home/opq/quadcopter_from_scratch/drone_pi_ws/install/rosidl_runtime_rs/share/rosidl_runtime_rs/rust"
 
-[patch.crates-io.sensor_fusion_pkg]
-path = "/home/opq/quadcopter_from_scratch/drone_pi_ws/install/sensor_fusion_pkg/share/sensor_fusion_pkg/rust"
-
 [patch.crates-io.visualization_msgs]
 path = "/home/opq/quadcopter_from_scratch/drone_pi_ws/install/visualization_msgs/share/visualization_msgs/rust"
 
@@ -36,6 +33,9 @@ path = "/home/opq/quadcopter_from_scratch/drone_pi_ws/install/std_srvs/share/std
 
 [patch.crates-io.shape_msgs]
 path = "/home/opq/quadcopter_from_scratch/drone_pi_ws/install/shape_msgs/share/shape_msgs/rust"
+
+[patch.crates-io.sensor_fusion_pkg]
+path = "/home/opq/quadcopter_from_scratch/drone_pi_ws/install/sensor_fusion_pkg/share/sensor_fusion_pkg/rust"
 
 [patch.crates-io.imu_publisher_pkg]
 path = "/home/opq/quadcopter_from_scratch/drone_pi_ws/install/imu_publisher_pkg/share/imu_publisher_pkg/rust"
