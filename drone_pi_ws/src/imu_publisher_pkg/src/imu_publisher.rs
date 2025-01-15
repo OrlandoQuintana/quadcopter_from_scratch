@@ -1,7 +1,7 @@
 use rclrs::{create_node, Context, Node, Publisher, RclrsError, QOS_PROFILE_DEFAULT};
 use sensor_msgs::msg::Imu as ImuMsg;
-use icm_20948_driver::imu::{Accelerometer, Gyroscope, IMU};
-use icm_20948_driver::spi_core::SpiCore;
+use icm20948_driver_rust::imu::{Accelerometer, Gyroscope, IMU};
+use icm20948_driver_rust::spi_core::SpiCore;
 use linux_embedded_hal::spidev::{Spidev, SpidevOptions, SpiModeFlags};
 use linux_embedded_hal::SpidevBus;
 use std::sync::{Arc, Mutex};

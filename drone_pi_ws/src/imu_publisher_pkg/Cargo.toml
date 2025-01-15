@@ -20,7 +20,7 @@ rclrs = "*"
 std_msgs = "*"
 sensor_msgs = { path = "/home/opq/quadcopter_from_scratch/drone_pi_ws/install/sensor_msgs/share/sensor_msgs/rust" }
 builtin_interfaces = { path = "/home/opq/quadcopter_from_scratch/drone_pi_ws/install/builtin_interfaces/share/builtin_interfaces/rust" }
-icm_20948_driver = { path = "/home/opq/quadcopter_from_scratch/drivers/icm_20948_driver" }
+icm20948-driver-rust = { git = "https://github.com/OrlandoQuintana/icm20948-driver-rust" }
 embedded-hal = "1.0.0"
 linux-embedded-hal = "0.4" # For running on Raspberry Pi
 

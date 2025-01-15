@@ -269,8 +269,9 @@ dependencies = [
 ]
 
 [[package]]
-name = "icm_20948_driver"
+name = "icm20948-driver-rust"
 version = "0.1.0"
+source = "git+https://github.com/OrlandoQuintana/icm20948-driver-rust#511a6f873b50beb62166ddf8e41abbc7b683de74"
 dependencies = [
  "embedded-hal",
  "linux-embedded-hal",
@@ -282,7 +283,7 @@ version = "0.1.0"
 dependencies = [
  "builtin_interfaces",
  "embedded-hal",
- "icm_20948_driver",
+ "icm20948-driver-rust",
  "linux-embedded-hal",
  "rclrs",
  "sensor_msgs",

@@ -1,5 +1,5 @@
 use rclrs::{create_node, Context, Node, RclrsError, Subscription, Publisher, QOS_PROFILE_DEFAULT};
-use rust_ekf::{EKF, GRAVITY};
+use rust_ekf::EKF;
 use sensor_msgs::msg::Imu;
 use geometry_msgs::msg::Quaternion;
 use std::{
