@@ -1,0 +1,1 @@
+cargo:rustc-link-search=/home/opq/quadcopter_from_scratch/drone_pi_ws/install/builtin_interfaces/lib

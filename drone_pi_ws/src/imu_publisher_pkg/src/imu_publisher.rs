@@ -95,15 +95,15 @@ impl IMUPublisherNode {
             imu_msg.linear_acceleration.y = filtered_y as f64;
             imu_msg.linear_acceleration.z = filtered_z as f64;
 
-/*             println!(
+            println!(
                 "Accel -> x: {:.3}, y: {:.3}, z: {:.3}",
                 imu_msg.linear_acceleration.x,
                 imu_msg.linear_acceleration.y,
                 imu_msg.linear_acceleration.z
             );
         } else {
-            println!("publish_data: Failed to read accelerometer"); */
-        } 
+            println!("publish_data: Failed to read accelerometer");
+        }
 
         // Read gyroscope data
         if let Ok(gyro_data) = self.gyro.read() {
@@ -112,10 +112,10 @@ impl IMUPublisherNode {
             imu_msg.angular_velocity.z = gyro_data[2] as f64;
 
             println!(
-                "Gyro -> x: {:.3}",
+                "Gyro -> x: {:.3}, y: {:.3}, z: {:.3}",
                 imu_msg.angular_velocity.x,
-                //imu_msg.angular_velocity.y,
-                //imu_msg.angular_velocity.z
+                imu_msg.angular_velocity.y,
+                imu_msg.angular_velocity.z
             );
         } else {
             println!("publish_data: Failed to read gyroscope");

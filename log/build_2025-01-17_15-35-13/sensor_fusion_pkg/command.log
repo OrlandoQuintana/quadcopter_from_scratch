@@ -1,0 +1,4 @@
+Invoking command in 'drone_pi_ws/src/sensor_fusion_pkg': /home/opq/.cargo/bin/cargo metadata --no-deps --format-version 1
+Invoked command in 'drone_pi_ws/src/sensor_fusion_pkg' returned '0': /home/opq/.cargo/bin/cargo metadata --no-deps --format-version 1
+Invoking command in 'drone_pi_ws/src/sensor_fusion_pkg': /home/opq/.cargo/bin/cargo ament-build --install-base /home/opq/quadcopter_from_scratch/install/sensor_fusion_pkg -- --manifest-path /home/opq/quadcopter_from_scratch/drone_pi_ws/src/sensor_fusion_pkg/Cargo.toml --target-dir /home/opq/quadcopter_from_scratch/build/sensor_fusion_pkg --quiet
+Invoked command in 'drone_pi_ws/src/sensor_fusion_pkg' returned '0': /home/opq/.cargo/bin/cargo ament-build --install-base /home/opq/quadcopter_from_scratch/install/sensor_fusion_pkg -- --manifest-path /home/opq/quadcopter_from_scratch/drone_pi_ws/src/sensor_fusion_pkg/Cargo.toml --target-dir /home/opq/quadcopter_from_scratch/build/sensor_fusion_pkg --quiet

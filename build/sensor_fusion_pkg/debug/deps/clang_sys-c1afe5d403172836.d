@@ -1,0 +1,14 @@
+/home/opq/quadcopter_from_scratch/build/sensor_fusion_pkg/debug/deps/libclang_sys-c1afe5d403172836.rmeta: /home/opq/.cargo/registry/src/index.crates.io-6f17d22bba15001f/clang-sys-1.8.1/src/lib.rs /home/opq/.cargo/registry/src/index.crates.io-6f17d22bba15001f/clang-sys-1.8.1/src/support.rs /home/opq/.cargo/registry/src/index.crates.io-6f17d22bba15001f/clang-sys-1.8.1/src/link.rs /home/opq/quadcopter_from_scratch/build/sensor_fusion_pkg/debug/build/clang-sys-a2b3a4874ca0749a/out/macros.rs /home/opq/quadcopter_from_scratch/build/sensor_fusion_pkg/debug/build/clang-sys-a2b3a4874ca0749a/out/common.rs /home/opq/quadcopter_from_scratch/build/sensor_fusion_pkg/debug/build/clang-sys-a2b3a4874ca0749a/out/dynamic.rs
+
+/home/opq/quadcopter_from_scratch/build/sensor_fusion_pkg/debug/deps/libclang_sys-c1afe5d403172836.rlib: /home/opq/.cargo/registry/src/index.crates.io-6f17d22bba15001f/clang-sys-1.8.1/src/lib.rs /home/opq/.cargo/registry/src/index.crates.io-6f17d22bba15001f/clang-sys-1.8.1/src/support.rs /home/opq/.cargo/registry/src/index.crates.io-6f17d22bba15001f/clang-sys-1.8.1/src/link.rs /home/opq/quadcopter_from_scratch/build/sensor_fusion_pkg/debug/build/clang-sys-a2b3a4874ca0749a/out/macros.rs /home/opq/quadcopter_from_scratch/build/sensor_fusion_pkg/debug/build/clang-sys-a2b3a4874ca0749a/out/common.rs /home/opq/quadcopter_from_scratch/build/sensor_fusion_pkg/debug/build/clang-sys-a2b3a4874ca0749a/out/dynamic.rs
+
+/home/opq/quadcopter_from_scratch/build/sensor_fusion_pkg/debug/deps/clang_sys-c1afe5d403172836.d: /home/opq/.cargo/registry/src/index.crates.io-6f17d22bba15001f/clang-sys-1.8.1/src/lib.rs /home/opq/.cargo/registry/src/index.crates.io-6f17d22bba15001f/clang-sys-1.8.1/src/support.rs /home/opq/.cargo/registry/src/index.crates.io-6f17d22bba15001f/clang-sys-1.8.1/src/link.rs /home/opq/quadcopter_from_scratch/build/sensor_fusion_pkg/debug/build/clang-sys-a2b3a4874ca0749a/out/macros.rs /home/opq/quadcopter_from_scratch/build/sensor_fusion_pkg/debug/build/clang-sys-a2b3a4874ca0749a/out/common.rs /home/opq/quadcopter_from_scratch/build/sensor_fusion_pkg/debug/build/clang-sys-a2b3a4874ca0749a/out/dynamic.rs
+
+/home/opq/.cargo/registry/src/index.crates.io-6f17d22bba15001f/clang-sys-1.8.1/src/lib.rs:
+/home/opq/.cargo/registry/src/index.crates.io-6f17d22bba15001f/clang-sys-1.8.1/src/support.rs:
+/home/opq/.cargo/registry/src/index.crates.io-6f17d22bba15001f/clang-sys-1.8.1/src/link.rs:
+/home/opq/quadcopter_from_scratch/build/sensor_fusion_pkg/debug/build/clang-sys-a2b3a4874ca0749a/out/macros.rs:
+/home/opq/quadcopter_from_scratch/build/sensor_fusion_pkg/debug/build/clang-sys-a2b3a4874ca0749a/out/common.rs:
+/home/opq/quadcopter_from_scratch/build/sensor_fusion_pkg/debug/build/clang-sys-a2b3a4874ca0749a/out/dynamic.rs:
+
+# env-dep:OUT_DIR=/home/opq/quadcopter_from_scratch/build/sensor_fusion_pkg/debug/build/clang-sys-a2b3a4874ca0749a/out

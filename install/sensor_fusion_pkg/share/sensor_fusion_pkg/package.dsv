@@ -1,0 +1,3 @@
+source;share/sensor_fusion_pkg/hook/ament_prefix_path.ps1
+source;share/sensor_fusion_pkg/hook/ament_prefix_path.dsv
+source;share/sensor_fusion_pkg/hook/ament_prefix_path.sh
