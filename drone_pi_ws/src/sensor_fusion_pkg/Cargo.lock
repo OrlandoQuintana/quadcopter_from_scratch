@@ -440,7 +440,6 @@ dependencies = [
 [[package]]
 name = "rust-ekf"
 version = "0.1.0"
-source = "git+https://github.com/OrlandoQuintana/rust-ekf.git#939214827fd2c2cc0638374ac7561dab16f2fd67"
 dependencies = [
  "nalgebra",
 ]
@@ -464,6 +463,7 @@ dependencies = [
 name = "sensor_fusion_pkg"
 version = "0.1.0"
 dependencies = [
+ "builtin_interfaces",
  "geometry_msgs",
  "rclrs",
  "rust-ekf",

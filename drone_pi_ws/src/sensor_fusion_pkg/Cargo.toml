@@ -7,9 +7,15 @@ edition = "2021"
 name="orientation_publisher"
 path="src/orientation_publisher.rs"
 
+[[bin]]
+name="quaternion_publisher"
+path="src/quaternion_publisher.rs"
+
 [dependencies]
 rclrs = "*"
 std_msgs = "*"
 sensor_msgs = { path = "/home/opq/quadcopter_from_scratch/drone_pi_ws/install/sensor_msgs/share/sensor_msgs/rust" }
 geometry_msgs = { path = "/home/opq/quadcopter_from_scratch/drone_pi_ws/install/geometry_msgs/share/geometry_msgs/rust" }
-rust-ekf = { git = "https://github.com/OrlandoQuintana/rust-ekf.git" }
+builtin_interfaces = { path = "/home/opq/quadcopter_from_scratch/drone_pi_ws/install/builtin_interfaces/share/builtin_interfaces/rust" }
+
+rust-ekf = { path = "/home/opq/rust-ekf" }

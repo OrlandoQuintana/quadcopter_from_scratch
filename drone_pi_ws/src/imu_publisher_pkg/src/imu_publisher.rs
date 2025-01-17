@@ -6,6 +6,8 @@ use linux_embedded_hal::spidev::{Spidev, SpidevOptions, SpiModeFlags};
 use linux_embedded_hal::SpidevBus;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
+use biquad::{Biquad, Coefficients, DirectForm1, ToHertz};
+
 
 
 /// Struct containing the ROS2 node, publisher, and IMU components
@@ -15,18 +17,34 @@ struct IMUPublisherNode {
     imu: IMU<SpidevBus>,
     accel: Accelerometer<SpidevBus>,
     gyro: Gyroscope<SpidevBus>,
+    filter_x: Mutex<DirectForm1<f32>>,
+    filter_y: Mutex<DirectForm1<f32>>,
+    filter_z: Mutex<DirectForm1<f32>>,
 }
 
 impl IMUPublisherNode {
     /// Create a new IMU Publisher Node
     fn new(context: &Context) -> Result<Self, RclrsError> {
-        // Create the ROS2 node and publisher
         let node = create_node(context, "imu_publisher").unwrap();
         let publisher = node
             .create_publisher::<ImuMsg>("/raw_imu", QOS_PROFILE_DEFAULT)
             .unwrap();
 
-        // Configure the SPI device
+        // Configure Butterworth filter coefficients
+        let coeffs = Coefficients::<f32>::from_params(
+            biquad::Type::LowPass,
+            500.0.hz(), // Sampling frequency (adjust as per your IMU's rate)
+            5.0.hz(),   // Cutoff frequency
+            0.707,      // Q factor (Butterworth characteristic)
+        )
+        .unwrap();
+
+        // Create filters for each axis
+        let filter_x = Mutex::new(DirectForm1::<f32>::new(coeffs));
+        let filter_y = Mutex::new(DirectForm1::<f32>::new(coeffs));
+        let filter_z = Mutex::new(DirectForm1::<f32>::new(coeffs));
+
+        // Configure IMU
         let mut spidev = Spidev::open("/dev/spidev0.0").expect("Failed to open SPI device");
         spidev
             .configure(
@@ -38,10 +56,8 @@ impl IMUPublisherNode {
             )
             .expect("Failed to configure SPI device");
 
-        // Create shared SPI bus and IMU components
         let spidev_bus = SpidevBus::from(linux_embedded_hal::SpidevBus(spidev));
         let spi = Arc::new(Mutex::new(SpiCore::new(spidev_bus)));
-
         let imu = IMU::new(Arc::clone(&spi));
         let accel = Accelerometer::new(Arc::clone(&spi));
         let gyro = Gyroscope::new(Arc::clone(&spi));
@@ -52,6 +68,9 @@ impl IMUPublisherNode {
             imu,
             accel,
             gyro,
+            filter_x,
+            filter_y,
+            filter_z,
         })
     }
 
@@ -67,29 +86,36 @@ impl IMUPublisherNode {
 
         // Read accelerometer data
         if let Ok(accel_data) = self.accel.read() {
-            imu_msg.linear_acceleration.x = accel_data[0] as f64;
-            imu_msg.linear_acceleration.y = accel_data[1] as f64;
-            imu_msg.linear_acceleration.z = accel_data[2] as f64;
-            println!(
-                "publish_data: Accel -> x: {:.3}, y: {:.3}, z: {:.3}",
+            // Filter accelerometer data
+            let filtered_x = self.filter_x.lock().unwrap().run(accel_data[0] as f32);
+            let filtered_y = self.filter_y.lock().unwrap().run(accel_data[1] as f32);
+            let filtered_z = self.filter_z.lock().unwrap().run(accel_data[2] as f32);
+
+            imu_msg.linear_acceleration.x = filtered_x as f64;
+            imu_msg.linear_acceleration.y = filtered_y as f64;
+            imu_msg.linear_acceleration.z = filtered_z as f64;
+
+/*             println!(
+                "Accel -> x: {:.3}, y: {:.3}, z: {:.3}",
                 imu_msg.linear_acceleration.x,
                 imu_msg.linear_acceleration.y,
                 imu_msg.linear_acceleration.z
             );
         } else {
-            println!("publish_data: Failed to read accelerometer");
-        }
+            println!("publish_data: Failed to read accelerometer"); */
+        } 
 
         // Read gyroscope data
         if let Ok(gyro_data) = self.gyro.read() {
             imu_msg.angular_velocity.x = gyro_data[0] as f64;
             imu_msg.angular_velocity.y = gyro_data[1] as f64;
             imu_msg.angular_velocity.z = gyro_data[2] as f64;
+
             println!(
-                "publish_data: Gyro -> x: {:.3}, y: {:.3}, z: {:.3}",
+                "Gyro -> x: {:.3}",
                 imu_msg.angular_velocity.x,
-                imu_msg.angular_velocity.y,
-                imu_msg.angular_velocity.z
+                //imu_msg.angular_velocity.y,
+                //imu_msg.angular_velocity.z
             );
         } else {
             println!("publish_data: Failed to read gyroscope");
@@ -119,7 +145,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Spawn a thread for publishing data
     std::thread::spawn(move || {
         loop {
-            std::thread::sleep(Duration::from_millis(10)); // Approx. 100 Hz
+            std::thread::sleep(Duration::from_millis(5)); // Approx. 100 Hz
             if let Ok(mut node) = publisher_node_thread.lock() {
                 if let Err(err) = node.publish_data() {
                     eprintln!("Error publishing IMU data: {:?}", err);
