@@ -1,3 +1,8 @@
+# Ignore main build, install and log directories
+build/
+install/
+log/
+
 # Ignore ROS2 build, install, and log directories
 drone_pi_ws/build/
 drone_pi_ws/install/
