@@ -25,14 +25,14 @@ The project is divided into two main packages:
 - **embedded-hal**: Rust-based hardware abstraction layer for embedded systems.
 - **linux-embedded-hal**: SPI and GPIO support for the Raspberry Pi.
 - [icm-20948-driver](https://github.com/OrlandoQuintana/icm20948-driver-rust): Custom Rust crate for interacting with the ICM-20948 IMU sensor.
-- [icm-20948-driver](https://github.com/OrlandoQuintana/icm20948-driver-rust): Custom Rust Extended Kalman Filter crate for quadcopter attitude estimation.
+- [rust-ekf](https://github.com/OrlandoQuintana/rust-ekf): Custom Rust Extended Kalman Filter crate for quadcopter attitude estimation.
 
 # Bill of Materials (BOM)
 
 ## Core Components
-- **F450 Quadcopter Frame**: Sturdy frame with pre-soldered ESC connectors, supports your motors and ESCs.  
+- **F450 Quadcopter Frame**: Sturdy frame with pre-soldered ESC connectors.  
   *Source*: [Amazon](https://www.amazon.com/YoungRC-4-Axis-Airframe-Quadcopter-Landing/dp/B0776WLHX7/ref=sr_1_1?s=toys-and-games&sr=1-1)  
-- **Raspberry Pi 4**: The onboard computer for controlling your quadcopter.  
+- **Raspberry Pi 4**: The onboard computer for controlling the quadcopter.  
   *Source*: [Amazon](https://www.amazon.com/Raspberry-Model-2019-Quad-Bluetooth/dp/B07TC2BK1X/ref=sr_1_1?sr=8-1)  
 - **ICM-20948 IMU Evaluation Board**: 9-axis motion sensor for flight stabilization and control.  
   *Source*: [DigiKey](https://www.digikey.com/en/products/detail/tdk-invensense/EV-ICM-20948/7319741)  
@@ -46,13 +46,13 @@ The project is divided into two main packages:
   *Source*: [Amazon](https://www.amazon.com/gp/product/B0716T67QN/ref=ox_sc_act_title_7?smid=AEXGS89RF8KCG&psc=1)  
 - **FainWan UBEC 3A Adjustable Output**: Converts battery voltage to a stable 5V to power the Raspberry Pi.  
   *Source*: [Amazon](https://www.amazon.com/gp/product/B09L6Z67Q8/ref=ox_sc_act_title_4?smid=A3V3IUEMLKZA8F&psc=1)  
-- **ReadyToSky 30A ESCs (4-Pack)**: Electronic speed controllers for motor control, compatible with your PDB.  
+- **ReadyToSky 30A ESCs (4-Pack)**: Electronic speed controllers for motor control, compatible with PDB.  
   *Source*: [Amazon](https://www.amazon.com/gp/product/B09G5WFXSV/ref=ox_sc_act_title_3?smid=A1LU71BLX914GS&psc=1)  
 
 ---
 
 ## Motors and Propulsion
-- **Hobbypower Emax MT2213 Motors (4-Pack)**: 935kV brushless motors designed for your F450 frame.  
+- **Hobbypower Emax MT2213 Motors (4-Pack)**: 935kV brushless motors designed for F450 Quadcopter frame.  
   *Source*: [Amazon](https://www.amazon.com/gp/product/B00EDHXZSK/ref=ox_sc_act_title_8?smid=A3OKQ1PMPIPWYS&psc=1)  
 - **Master Airscrew Propellers (10x4.5)**: High-quality, balanced propellers for efficient thrust.  
   *Source*: [Amazon](https://www.amazon.com/gp/product/B0734CF553/ref=ox_sc_act_title_6?smid=AXJHMDL7TGZUF&psc=1)  
@@ -60,7 +60,7 @@ The project is divided into two main packages:
 ---
 
 ## Radio Control System
-- **FlySky FS-i6X Transmitter + FS-iA6B Receiver**: Reliable 6-channel transmitter and receiver system for piloting your quadcopter.  
+- **FlySky FS-i6X Transmitter + FS-iA6B Receiver**: Reliable 6-channel transmitter and receiver system for piloting the quadcopter.  
   *Source*: [Amazon](https://www.amazon.com/gp/product/B0B3R1K9KC/ref=ox_sc_act_title_2?smid=A27Y3358ST3KOY&psc=1)  
 
 ---
@@ -72,7 +72,7 @@ The project is divided into two main packages:
 ---
 
 ## Charging and Maintenance
-- **B6 LiPo Balance Charger**: Safely charges and balances your 4S LiPo battery.  
+- **B6 LiPo Balance Charger**: Safely charges and balances 4S LiPo battery.  
   *Source*: [Amazon](https://www.amazon.com/gp/product/B09PMP1DS3/ref=ox_sc_act_title_1?smid=A3SYA50HCALWU5&psc=1) 
 
 ---
