@@ -2,6 +2,9 @@
 
 ## **Overview**
 
+![Quadcopter Architecture](images/quad_arch.png)
+
+
 This project implements a fully functional quadcopter system from scratch, using **Rust** for firmware development and **ROS2** for distributed processing and communication. The goal is to create a modular, extensible, and high-performance quadcopter platform that can stabilize itself in flight, process sensor data, and handle user input.
 
 The project is divided into two main packages:
@@ -21,19 +24,62 @@ The project is divided into two main packages:
 - **rclrs**: Rust client library for ROS2.
 - **embedded-hal**: Rust-based hardware abstraction layer for embedded systems.
 - **linux-embedded-hal**: SPI and GPIO support for the Raspberry Pi.
-- **icm-20948-driver**: Custom Rust crate for interacting with the ICM-20948 IMU sensor.
+- [icm-20948-driver](https://github.com/OrlandoQuintana/icm20948-driver-rust): Custom Rust crate for interacting with the ICM-20948 IMU sensor.
+- [icm-20948-driver](https://github.com/OrlandoQuintana/icm20948-driver-rust): Custom Rust Extended Kalman Filter crate for quadcopter attitude estimation.
 
-### **Hardware**
-- **ICM-20948 IMU**: Provides accelerometer and gyroscope data for flight stabilization.
-- **Raspberry Pi**: Serves as the main flight controller.
-- **Electronic Speed Controllers (ESCs)**: Drive the quadcopter motors.
-- **XBox Controller**: Used for user input to control orientation and throttle.
+# Bill of Materials (BOM)
+
+## Core Components
+- **F450 Quadcopter Frame**: Sturdy frame with pre-soldered ESC connectors, supports your motors and ESCs.  
+  *Source*: [Amazon](https://www.amazon.com/YoungRC-4-Axis-Airframe-Quadcopter-Landing/dp/B0776WLHX7/ref=sr_1_1?s=toys-and-games&sr=1-1)  
+- **Raspberry Pi 4**: The onboard computer for controlling your quadcopter.  
+  *Source*: [Amazon](https://www.amazon.com/Raspberry-Model-2019-Quad-Bluetooth/dp/B07TC2BK1X/ref=sr_1_1?sr=8-1)  
+- **ICM-20948 IMU Evaluation Board**: 9-axis motion sensor for flight stabilization and control.  
+  *Source*: [DigiKey](https://www.digikey.com/en/products/detail/tdk-invensense/EV-ICM-20948/7319741)  
+- **Holybro Power Distribution Board (PDB) 60A**: Pre-soldered XT60 input and XT30 outputs for power distribution.  
+  *Source*: [Holybro](https://holybro.com/products/power-distribution-board-pdb?variant=41590962716861)  
+
+---
+
+## Electronics and Power
+- **HRB 14.8V 6000mAh 4S LiPo Battery**: High-capacity battery to power motors, ESCs, and other electronics.  
+  *Source*: [Amazon](https://www.amazon.com/gp/product/B0716T67QN/ref=ox_sc_act_title_7?smid=AEXGS89RF8KCG&psc=1)  
+- **FainWan UBEC 3A Adjustable Output**: Converts battery voltage to a stable 5V to power the Raspberry Pi.  
+  *Source*: [Amazon](https://www.amazon.com/gp/product/B09L6Z67Q8/ref=ox_sc_act_title_4?smid=A3V3IUEMLKZA8F&psc=1)  
+- **ReadyToSky 30A ESCs (4-Pack)**: Electronic speed controllers for motor control, compatible with your PDB.  
+  *Source*: [Amazon](https://www.amazon.com/gp/product/B09G5WFXSV/ref=ox_sc_act_title_3?smid=A1LU71BLX914GS&psc=1)  
+
+---
+
+## Motors and Propulsion
+- **Hobbypower Emax MT2213 Motors (4-Pack)**: 935kV brushless motors designed for your F450 frame.  
+  *Source*: [Amazon](https://www.amazon.com/gp/product/B00EDHXZSK/ref=ox_sc_act_title_8?smid=A3OKQ1PMPIPWYS&psc=1)  
+- **Master Airscrew Propellers (10x4.5)**: High-quality, balanced propellers for efficient thrust.  
+  *Source*: [Amazon](https://www.amazon.com/gp/product/B0734CF553/ref=ox_sc_act_title_6?smid=AXJHMDL7TGZUF&psc=1)  
+
+---
+
+## Radio Control System
+- **FlySky FS-i6X Transmitter + FS-iA6B Receiver**: Reliable 6-channel transmitter and receiver system for piloting your quadcopter.  
+  *Source*: [Amazon](https://www.amazon.com/gp/product/B0B3R1K9KC/ref=ox_sc_act_title_2?smid=A27Y3358ST3KOY&psc=1)  
+
+---
+
+## Wiring and Connectors
+- **ZHOFONET XT60 Connector Pigtails**: Pre-soldered XT60 connectors for easy power wiring.  
+  *Source*: [Amazon](https://www.amazon.com/gp/product/B09M6KQWBL/ref=ox_sc_act_title_5?smid=A7B8LKG94QULK&psc=1)  
+
+---
+
+## Charging and Maintenance
+- **B6 LiPo Balance Charger**: Safely charges and balances your 4S LiPo battery.  
+  *Source*: [Amazon](https://www.amazon.com/gp/product/B09PMP1DS3/ref=ox_sc_act_title_1?smid=A3SYA50HCALWU5&psc=1) 
 
 ---
 
 ## **Project Architecture**
 
-The quadcopter system is modular, with individual ROS2 nodes performing specific tasks. Below is an explanation of the architecture, based on the provided system diagram:
+The quadcopter system is modular, with individual ROS2 nodes performing specific tasks. Below is an explanation of the architecture, based on the above system architecture diagram:
 
 ### **1. IMU Processing Package**
 #### **Purpose**
@@ -41,13 +87,13 @@ The quadcopter system is modular, with individual ROS2 nodes performing specific
 
 #### **Components**
 1. **`imu_publisher` Node**
-   - Reads raw accelerometer and gyroscope data from the ICM-20948 over SPI using the custom Rust driver.
+   - Reads raw accelerometer and gyroscope data from the ICM-20948 over SPI using the custom ICM-20948 Rust driver.
    - Publishes raw IMU data to the `/raw_imu` ROS2 topic.
    
 2. **`sensor_fusion` Node**
    - Subscribes to `/raw_imu` to receive raw accelerometer and gyroscope data.
-   - Uses an **Extended Kalman Filter (EKF)** to fuse the data and estimate roll, pitch, and yaw angles.
-   - Publishes the estimated orientation to the `/estimated_orientation` topic.
+   - Uses an **Extended Kalman Filter (EKF)** to fuse the data and estimate quadcopter attitude.
+   - Publishes the estimated orientation to the `/quaternion_estimate` ROS2 topic.
 
 ---
 
@@ -57,11 +103,11 @@ The quadcopter system is modular, with individual ROS2 nodes performing specific
 
 #### **Components**
 1. **`controller_input` Node**
-   - Reads user input from an XBox controller connected via USB.
+   - Reads user input from an Radio controller connected via UART.
    - Publishes the desired orientation and throttle to the `/desired_orientation` and `/throttle` topics.
 
 2. **`pid_controller` Node**
-   - Subscribes to `/estimated_orientation`, `/desired_orientation`, and `/throttle`.
+   - Subscribes to `/quaternion_estimate`, `/desired_orientation`, and `/throttle`.
    - Implements a **cascaded PID control system** to calculate the necessary motor adjustments to achieve stable flight.
    - Publishes motor commands to the `/calculated_motor_commands` topic.
 
@@ -78,11 +124,11 @@ The quadcopter system is modular, with individual ROS2 nodes performing specific
    - The `imu_publisher` node reads this data via SPI and publishes it to the `/raw_imu` topic.
 
 2. **Sensor Fusion**:
-   - The `sensor_fusion` node fuses accelerometer and gyroscope data using an EKF to compute the quadcopter's orientation (roll, pitch, yaw).
-   - The fused data is published to the `/estimated_orientation` topic.
+   - The `sensor_fusion` node fuses accelerometer and gyroscope data using an EKF to compute the quadcopter's attitude.
+   - The fused data is published to the `/quaternion_estimate` topic.
 
 3. **User Input**:
-   - The `controller_input` node reads user commands (desired roll, pitch, yaw, and throttle) from an XBox controller.
+   - The `controller_input` node reads user commands (desired roll, pitch, yaw, and throttle) from a Radio controller.
    - These commands are published to the `/desired_orientation` and `/throttle` topics.
 
 4. **Control System**:
@@ -92,43 +138,7 @@ The quadcopter system is modular, with individual ROS2 nodes performing specific
 5. **Motor Commands**:
    - The `motor_command` node converts motor adjustment commands into PWM signals to drive the quadcopter's motors via ESCs.
 
----
 
-## **Installation and Setup**
-
-### **Prerequisites**
-1. **Rust**:
-   - Install using [rustup](https://rustup.rs/):
-     ```bash
-     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-     ```
-2. **ROS2 Humble**:
-   - Follow the [installation guide](https://docs.ros.org/en/humble/Installation.html).
-
-3. **Enable SPI** on the Raspberry Pi:
-   ```bash
-   sudo raspi-config
-   ```
-   Navigate to **Interfacing Options → SPI** and enable it.
-
-4. **Clone the Repository**:
-   ```bash
-   git clone https://github.com/your-repo/quadcopter_from_scratch.git
-   cd quadcopter_from_scratch
-   ```
-
-### **Build and Run**
-1. **Build the Rust Nodes**:
-   ```bash
-   cargo build --release
-   ```
-
-2. **Run the Nodes**:
-   - Start the ROS2 nodes individually or use a launch file for automation.
-   - Example: Start the IMU publisher node:
-     ```bash
-     cargo run --release --bin imu_publisher
-     ```
 
 ---
 
@@ -137,8 +147,8 @@ The quadcopter system is modular, with individual ROS2 nodes performing specific
 | **Topic Name**          | **Message Type**          | **Description**                                                   |
 |--------------------------|---------------------------|-------------------------------------------------------------------|
 | `/raw_imu`              | `sensor_msgs/msg/Imu`     | Raw accelerometer and gyroscope data from the ICM-20948 IMU.      |
-| `/estimated_orientation` | `geometry_msgs/msg/Pose` | Fused roll, pitch, and yaw data estimated via sensor fusion.      |
-| `/desired_orientation`   | `geometry_msgs/msg/Pose` | User-specified desired orientation (roll, pitch, yaw).            |
+| `/quaternion_estimate`  | `sensor_msgs/msg/Imu`  | Fused roll, pitch, and yaw data estimated via sensor fusion.      |
+| `/desired_orientation`   | `sensor_msgs/msg/Imu` | User-specified desired orientation (roll, pitch, yaw).            |
 | `/throttle`              | `std_msgs/msg/Float64`   | User-specified throttle value.                                    |
 | `/calculated_motor_commands` | `std_msgs/msg/Float64MultiArray` | Motor adjustment commands from the PID controller.               |
 
