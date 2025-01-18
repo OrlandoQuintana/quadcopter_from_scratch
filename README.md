@@ -18,14 +18,17 @@ The project is divided into two main packages:
 ### **Programming Languages**
 - **Rust**: Core development language for high-performance, memory-safe firmware and ROS2 nodes.
 - **C/C++**: Possible extensions or integrations where high-performance libraries like OpenCV or specific ROS2 features are required.
+- **Python**: For rapid prototyping, ROS2 launch files, and high-level robotics libraries.
 
 ### **Frameworks and Libraries**
 - **ROS2**: Middleware framework for managing communication between nodes.
-- **rclrs**: Rust client library for ROS2.
-- **embedded-hal**: Rust-based hardware abstraction layer for embedded systems.
-- **linux-embedded-hal**: SPI and GPIO support for the Raspberry Pi.
+- **RViz2**: ROS2 3D vizualization tool for quadcopter real-time visualization.
+- [rclrs](https://github.com/ros2-rust/ros2_rust): Rust client library for ROS2.
+- [embedded-hal](https://docs.rs/embedded-hal/1.0.0/embedded_hal/): Rust-based hardware abstraction layer for embedded systems.
+- [linux-embedded-hal](https://docs.rs/linux-embedded-hal/latest/linux_embedded_hal/): SPI and GPIO support for the Raspberry Pi.
+- [nalgebra](https://docs.rs/nalgebra/latest/nalgebra/): Rust crate for linear algebra calculations in the Extended Kalman Filter.
 - [icm-20948-driver](https://github.com/OrlandoQuintana/icm20948-driver-rust): Custom Rust crate for interacting with the ICM-20948 IMU sensor.
-- [rust-ekf](https://github.com/OrlandoQuintana/rust-ekf): Custom Rust Extended Kalman Filter crate for quadcopter attitude estimation.
+- [rust-ekf](https://github.com/OrlandoQuintana/rust-ekf): Custom Rust crate for Extended Kalman Filter quadcopter attitude estimation.
 
 # Bill of Materials (BOM)
 
