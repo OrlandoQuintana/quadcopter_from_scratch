@@ -34,7 +34,7 @@ impl IMUPublisherNode {
         let coeffs = Coefficients::<f32>::from_params(
             biquad::Type::LowPass,
             500.0.hz(), // Sampling frequency (adjust as per your IMU's rate)
-            5.0.hz(),   // Cutoff frequency
+            2.0.hz(),   // Cutoff frequency
             0.707,      // Q factor (Butterworth characteristic)
         )
         .unwrap();
@@ -107,9 +107,13 @@ impl IMUPublisherNode {
 
         // Read gyroscope data
         if let Ok(gyro_data) = self.gyro.read() {
-            imu_msg.angular_velocity.x = gyro_data[0] as f64;
-            imu_msg.angular_velocity.y = gyro_data[1] as f64;
-            imu_msg.angular_velocity.z = gyro_data[2] as f64;
+
+            // Gyroscope Calibration
+            // Run the gyroscope for X iterations with the gyroscope completely at rest. take the average
+            // reading and subtract from all gyroscope readings to get a calibrated reading
+            imu_msg.angular_velocity.x = (gyro_data[0] - (-0.00125)) as f64; // X Bias
+            imu_msg.angular_velocity.y = (gyro_data[1] - (0.013)) as f64; // Y Bias
+            imu_msg.angular_velocity.z = (gyro_data[2] - (0.006)) as f64; // Z Bias
 
             println!(
                 "Gyro -> x: {:.3}, y: {:.3}, z: {:.3}",
@@ -144,14 +148,28 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Spawn a thread for publishing data
     std::thread::spawn(move || {
+        let mut last_time = std::time::Instant::now();
         loop {
-            std::thread::sleep(Duration::from_millis(5)); // Approx. 100 Hz
-            if let Ok(mut node) = publisher_node_thread.lock() {
-                if let Err(err) = node.publish_data() {
-                    eprintln!("Error publishing IMU data: {:?}", err);
+            // Calculate elapsed time since the last loop
+            let elapsed = last_time.elapsed();
+            let elapsed_ms = elapsed.as_millis() as u64;
+
+            // Check if we've exceeded 2 ms
+            if elapsed_ms >= 2 {
+                // Update the timestamp for the next cycle
+                last_time = std::time::Instant::now();
+
+                // Call the publish data method
+                if let Ok(mut node) = publisher_node_thread.lock() {
+                    if let Err(err) = node.publish_data() {
+                        eprintln!("Error publishing IMU data: {:?}", err);
+                    }
+                } else {
+                    eprintln!("Failed to lock publisher node.");
                 }
             } else {
-                eprintln!("Failed to lock publisher node.");
+                // Sleep for the remaining time in the 2 ms window
+                std::thread::sleep(Duration::from_micros((2000 - elapsed.as_micros() as u64) as u64));
             }
         }
     });
