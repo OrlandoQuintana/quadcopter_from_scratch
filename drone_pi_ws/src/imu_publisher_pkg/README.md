@@ -133,8 +133,8 @@ A custom struct encapsulating:
 
 ### **Data Publishing**
 - Reads data from the accelerometer and gyroscope using the custom driver.
-- Applies a Butterworh low-pass filter to the accelerometer data. Sammpling frquency here must match the real sampling frequency (200 Hz in this case)
-- Applies calibrationi offset to gyroscope data. To find the offsets, read the gyroscope data rest for a set period of time. Calculate the averagae reading over the period of time and use that as the offset. There plans to add automatic calibration but it is done manually for now.
+- Applies a Butterworth low-pass filter to the accelerometer data. Sampling frquency here must match the real sampling frequency (200 Hz in this case)
+- Applies calibration offset to gyroscope data. To find the offsets, read the gyroscope data rest for a set period of time. Calculate the average reading over the period of time and use that as the offset. There are plans to add automatic calibration but it is done manually for now.
 - Publishes IMU data in `sensor_msgs/msg/Imu` format via the `/raw_imu` topic.
 
 ---
@@ -146,7 +146,7 @@ The IMU is initialized with the following steps:
 2. Set sensitivity for:
    - Accelerometer: ±2g.
    - Gyroscope: ±250 dps.
-3. Configure low-pass filters for noise reduction.
+3. Configure hardware low-pass filters for noise reduction.
 
 ### **Publishing Logic**
 The `publish_data` method:
