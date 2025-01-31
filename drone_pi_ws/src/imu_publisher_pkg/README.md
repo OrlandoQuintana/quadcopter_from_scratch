@@ -1,7 +1,7 @@
 # **ROS2 IMU Publisher Node**
 
 ## **Overview**
-This project implements a **ROS2 node** in Rust that reads data from the **ICM-20948 IMU** and publishes it to a ROS2 topic `/raw_imu`. The node uses a custom Rust driver (`icm-20948-driver`) to interface with the IMU over SPI and follows the `sensor_msgs/msg/Imu` message format for publishing.
+This project implements a **ROS2 node** in Rust that reads accerelomerer and gyroscope data from the **ICM-20948 IMU** and publishes it to a ROS2 topic `/raw_imu`. The node uses a custom Rust driver (`icm-20948-driver`) to interface with the IMU over SPI and follows the `sensor_msgs/msg/Imu` message format for publishing.
 
 The node provides:
 - Real-time accelerometer and gyroscope data.
@@ -19,7 +19,7 @@ The node provides:
    - Publishes data in the standard `sensor_msgs/msg/Imu` format, which is widely compatible with robotics applications.
 
 3. **High-Frequency Publishing**:
-   - Publishes IMU data to the topic `/raw_imu` at approximately **100 Hz**.
+   - Publishes IMU data to the topic `/raw_imu` at approximately **200 Hz**.
 
 4. **Thread-Safe Design**:
    - Uses `Arc<Mutex<SpiCore>>` to ensure safe concurrent access to the SPI bus.
@@ -29,11 +29,8 @@ The node provides:
 ## **Requirements**
 
 ### **Software**
-- **Rust** (minimum version 1.65):
-  - Install Rust using [rustup](https://rustup.rs/):
-    ```bash
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-    ```
+- **Rust** 
+
 - **ROS2 Humble** or newer:
   - Follow the [official installation guide](https://docs.ros.org/en/humble/Installation.html).
 
@@ -87,7 +84,7 @@ Add these dependencies to your `Cargo.toml`:
 [dependencies]
 rclrs = "0.10"
 linux-embedded-hal = "0.6"
-icm-20948-driver = { path = "../path-to-your-driver" }
+icm20948-driver-rust = { git = "https://github.com/OrlandoQuintana/icm20948-driver-rust" }
 ```
 
 ---
@@ -123,28 +120,6 @@ To see the data being published:
 
 ---
 
-## **How to Build and Run**
-
-### **Build the Node**
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-repo/ros2-imu-publisher.git
-   cd ros2-imu-publisher
-   ```
-
-2. Build the project:
-   ```bash
-   cargo build --release
-   ```
-
-### **Run the Node**
-Start the ROS2 IMU Publisher node:
-```bash
-cargo run --release
-```
-
----
-
 ## **Code Overview**
 ### **`IMUPublisherNode`**
 A custom struct encapsulating:
@@ -158,6 +133,8 @@ A custom struct encapsulating:
 
 ### **Data Publishing**
 - Reads data from the accelerometer and gyroscope using the custom driver.
+- Applies a Butterworh low-pass filter to the accelerometer data. Sammpling frquency here must match the real sampling frequency (200 Hz in this case)
+- Applies calibrationi offset to gyroscope data. To find the offsets, read the gyroscope data rest for a set period of time. Calculate the averagae reading over the period of time and use that as the offset. There plans to add automatic calibration but it is done manually for now.
 - Publishes IMU data in `sensor_msgs/msg/Imu` format via the `/raw_imu` topic.
 
 ---
@@ -182,8 +159,7 @@ The `publish_data` method:
 ## **Future Enhancements**
 1. Add support for the ICM-20948 magnetometer.
 2. Implement additional configuration options for IMU sensitivity and filters.
-3. Integrate sensor fusion algorithms for roll, pitch, and yaw estimation.
+3. Add some method of auto gyroscope calibration.
 
 ---
 
-This `README.md` is fully formatted and ready to paste into your project. You can copy and paste it directly into your text editor or GitHub repository without any formatting issues.

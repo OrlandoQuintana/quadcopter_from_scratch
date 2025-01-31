@@ -78,7 +78,7 @@ impl QuaternionPublisherNode {
                 elapsed.as_secs_f64() // Convert to seconds as f64
             } else {
                 // Use a default `dt` for the first iteration
-                0.002 // Assume 2 ms (500 Hz)
+                0.005 // Assume 2 ms (500 Hz)
             };
             *last_update_time = Some(Instant::now()); // Update the last callback time
 
@@ -99,6 +99,7 @@ impl QuaternionPublisherNode {
                     data.angular_velocity.y as f64,
                     data.angular_velocity.z as f64,
                 ];
+
 
                 ekf.predict(gyro_data, dt); // Pass raw gyro data and dynamically calculated timestep dt to the ekf's predict method
                 ekf.update(accel_data); // Pass raw accelerometer data to the ekf's update method
@@ -139,7 +140,8 @@ impl QuaternionPublisherNode {
                 // Publish the message
                 self._publisher.publish(&imu_msg)?;
 
-                println!("Published Quaternion: w={:.3}, x={:.3}, y={:.3}, z={:.3}", quaternion.w, quaternion.x, quaternion.y, quaternion.z);
+                
+                //println!("Published Quaternion: w={:.3}, x={:.3}, y={:.3}, z={:.3}", quaternion.w, quaternion.x, quaternion.y, quaternion.z);
             }
         }
         Ok(())

@@ -1,16 +1,16 @@
 use rclrs::{create_node, Context, Node, Publisher, RclrsError, QOS_PROFILE_DEFAULT};
 use sensor_msgs::msg::Imu as ImuMsg;
-use icm20948_driver_rust::imu::{Accelerometer, Gyroscope, IMU};
+use icm20948_driver_rust::imu::{Accelerometer, Gyroscope, IMU}; // Custom Rust driver, https://github.com/OrlandoQuintana/icm20948-driver-rust
 use icm20948_driver_rust::spi_core::SpiCore;
-use linux_embedded_hal::spidev::{Spidev, SpidevOptions, SpiModeFlags};
+use linux_embedded_hal::spidev::{Spidev, SpidevOptions, SpiModeFlags}; // Wraps embedded-hal code used in the driver for use on Linux
 use linux_embedded_hal::SpidevBus;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
-use biquad::{Biquad, Coefficients, DirectForm1, ToHertz};
+use biquad::{Biquad, Coefficients, DirectForm1, ToHertz}; // Crate for Butterworth low pass filter
 
 
 
-/// Struct containing the ROS2 node, publisher, and IMU components
+/// Struct containing the ROS2 node, publisher, IMU components. a filter parameters
 struct IMUPublisherNode {
     node: Arc<Node>,
     publisher: Arc<Publisher<ImuMsg>>,
@@ -25,6 +25,8 @@ struct IMUPublisherNode {
 impl IMUPublisherNode {
     /// Create a new IMU Publisher Node
     fn new(context: &Context) -> Result<Self, RclrsError> {
+        
+        // Standard ROS2 Rust node and publisher initialization
         let node = create_node(context, "imu_publisher").unwrap();
         let publisher = node
             .create_publisher::<ImuMsg>("/raw_imu", QOS_PROFILE_DEFAULT)
@@ -33,8 +35,8 @@ impl IMUPublisherNode {
         // Configure Butterworth filter coefficients
         let coeffs = Coefficients::<f32>::from_params(
             biquad::Type::LowPass,
-            500.0.hz(), // Sampling frequency (adjust as per your IMU's rate)
-            2.0.hz(),   // Cutoff frequency
+            200.0.hz(), // Sampling frequency (adjust as per your IMU's rate)
+            15.0.hz(),   // Cutoff frequency
             0.707,      // Q factor (Butterworth characteristic)
         )
         .unwrap();
@@ -84,7 +86,7 @@ impl IMUPublisherNode {
     fn publish_data(&mut self) -> Result<(), RclrsError> {
         let mut imu_msg = ImuMsg::default();
 
-        // Read accelerometer data
+        // Read accelerometer data using read method from the driver
         if let Ok(accel_data) = self.accel.read() {
             // Filter accelerometer data
             let filtered_x = self.filter_x.lock().unwrap().run(accel_data[0] as f32);
@@ -111,7 +113,7 @@ impl IMUPublisherNode {
             // Gyroscope Calibration
             // Run the gyroscope for X iterations with the gyroscope completely at rest. take the average
             // reading and subtract from all gyroscope readings to get a calibrated reading
-            imu_msg.angular_velocity.x = (gyro_data[0] - (-0.00125)) as f64; // X Bias
+            imu_msg.angular_velocity.x = (gyro_data[0] - (-0.0007)) as f64; // X Bias
             imu_msg.angular_velocity.y = (gyro_data[1] - (0.013)) as f64; // Y Bias
             imu_msg.angular_velocity.z = (gyro_data[2] - (0.006)) as f64; // Z Bias
 
@@ -150,12 +152,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     std::thread::spawn(move || {
         let mut last_time = std::time::Instant::now();
         loop {
+            // Set up loop to publish as closely to 200 Hz as possible
+
+
             // Calculate elapsed time since the last loop
             let elapsed = last_time.elapsed();
             let elapsed_ms = elapsed.as_millis() as u64;
 
-            // Check if we've exceeded 2 ms
-            if elapsed_ms >= 2 {
+            // Check if we've exceeded 5 ms
+            if elapsed_ms >= 5 {
                 // Update the timestamp for the next cycle
                 last_time = std::time::Instant::now();
 
@@ -168,14 +173,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     eprintln!("Failed to lock publisher node.");
                 }
             } else {
-                // Sleep for the remaining time in the 2 ms window
-                std::thread::sleep(Duration::from_micros((2000 - elapsed.as_micros() as u64) as u64));
+                // Sleep for the remaining time in the 5 ms window
+                std::thread::sleep(Duration::from_micros((5000 - elapsed.as_micros() as u64) as u64));
             }
         }
     });
 
     // Spin the node to process callbacks
-    rclrs::spin(node_handle)?; // Only spin the node, without locking the publisher logic
+    rclrs::spin(node_handle)?;
 
     Ok(())
 }
