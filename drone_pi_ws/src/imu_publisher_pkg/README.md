@@ -134,7 +134,7 @@ A custom struct encapsulating:
 ### **Data Publishing**
 - Reads data from the accelerometer and gyroscope using the custom driver.
 - Applies a Butterworth low-pass filter to the accelerometer data. Sampling frequency here must match the real sampling frequency (200 Hz in this case)
-- Applies calibration offset to gyroscope data. To find the offsets, read the gyroscope data rest for a set period of time, calculate the average reading over the period of time and use that as the offset. There are plans to add automatic calibration but it is done manually for now.
+- Applies calibration offset to gyroscope data. To find the offsets, read the gyroscope data **at rest** for a set period of time, calculate the average reading over the period of time and use that as the offset. There are plans to add automatic calibration but it is done manually for now.
 - Publishes IMU data in standard ROS2 `sensor_msgs/msg/Imu` format via the `/raw_imu` topic.
 
 ---
