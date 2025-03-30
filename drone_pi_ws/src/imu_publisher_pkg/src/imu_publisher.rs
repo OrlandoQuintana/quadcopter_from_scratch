@@ -35,8 +35,8 @@ impl IMUPublisherNode {
         // Configure Butterworth filter coefficients
         let coeffs = Coefficients::<f32>::from_params(
             biquad::Type::LowPass,
-            200.0.hz(), // Sampling frequency (adjust as per your IMU's rate)
-            15.0.hz(),   // Cutoff frequency
+            1000.0.hz(), // Sampling frequency (adjust as per your IMU's rate)
+            80.0.hz(),   // Cutoff frequency
             0.707,      // Q factor (Butterworth characteristic)
         )
         .unwrap();
@@ -52,7 +52,7 @@ impl IMUPublisherNode {
             .configure(
                 &SpidevOptions::new()
                     .bits_per_word(8)
-                    .max_speed_hz(1_000_000)
+                    .max_speed_hz(7_000_000)
                     .mode(SpiModeFlags::SPI_MODE_0)
                     .build(),
             )
@@ -96,13 +96,14 @@ impl IMUPublisherNode {
             imu_msg.linear_acceleration.x = filtered_x as f64;
             imu_msg.linear_acceleration.y = filtered_y as f64;
             imu_msg.linear_acceleration.z = filtered_z as f64;
-
+/*
             println!(
                 "Accel -> x: {:.3}, y: {:.3}, z: {:.3}",
                 imu_msg.linear_acceleration.x,
                 imu_msg.linear_acceleration.y,
                 imu_msg.linear_acceleration.z
             );
+*/
         } else {
             println!("publish_data: Failed to read accelerometer");
         }
@@ -116,13 +117,14 @@ impl IMUPublisherNode {
             imu_msg.angular_velocity.x = (gyro_data[0] - (-0.0007)) as f64; // X Bias
             imu_msg.angular_velocity.y = (gyro_data[1] - (0.013)) as f64; // Y Bias
             imu_msg.angular_velocity.z = (gyro_data[2] - (0.006)) as f64; // Z Bias
-
+/*
             println!(
                 "Gyro -> x: {:.3}, y: {:.3}, z: {:.3}",
                 imu_msg.angular_velocity.x,
                 imu_msg.angular_velocity.y,
                 imu_msg.angular_velocity.z
             );
+*/
         } else {
             println!("publish_data: Failed to read gyroscope");
         }
@@ -152,7 +154,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     std::thread::spawn(move || {
         let mut last_time = std::time::Instant::now();
         loop {
-            // Set up loop to publish as closely to 200 Hz as possible
+            // Set up loop to publish as closely to X Hz as possible
 
 
             // Calculate elapsed time since the last loop
@@ -160,9 +162,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let elapsed_ms = elapsed.as_millis() as u64;
 
             // Check if we've exceeded 5 ms
-            if elapsed_ms >= 5 {
+            if elapsed_ms >= 1 {
                 // Update the timestamp for the next cycle
                 last_time = std::time::Instant::now();
+
+                let start = std::time::Instant::now();
 
                 // Call the publish data method
                 if let Ok(mut node) = publisher_node_thread.lock() {
@@ -172,9 +176,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 } else {
                     eprintln!("Failed to lock publisher node.");
                 }
+
+                let duration = start.elapsed();
+                println!("IMU publish loop execution time: {} µs", duration.as_micros());
+
             } else {
-                // Sleep for the remaining time in the 5 ms window
-                std::thread::sleep(Duration::from_micros((5000 - elapsed.as_micros() as u64) as u64));
+                // Sleep for the remaining time in the Y ms window
+                std::thread::sleep(Duration::from_micros((1000 - elapsed.as_micros() as u64) as u64));
             }
         }
     });

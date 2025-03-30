@@ -35,7 +35,7 @@ The project is divided into two main packages:
 ## Core Components
 - **F450 Quadcopter Frame**: Sturdy frame with pre-soldered ESC connectors.  
   *Source*: [Amazon](https://www.amazon.com/YoungRC-4-Axis-Airframe-Quadcopter-Landing/dp/B0776WLHX7/ref=sr_1_1?s=toys-and-games&sr=1-1)  
-- **Raspberry Pi 4**: The onboard computer for controlling the quadcopter.  
+- **Raspberry Pi 4*a*: The onboard computer for controlling the quadcopter.  
   *Source*: [Amazon](https://www.amazon.com/Raspberry-Model-2019-Quad-Bluetooth/dp/B07TC2BK1X/ref=sr_1_1?sr=8-1)  
 - **ICM-20948 IMU Evaluation Board**: 9-axis motion sensor for flight stabilization and control.  
   *Source*: [DigiKey](https://www.digikey.com/en/products/detail/tdk-invensense/EV-ICM-20948/7319741)  
@@ -84,7 +84,7 @@ The project is divided into two main packages:
 
 The quadcopter system is modular, with individual ROS2 nodes performing specific tasks. Below is an explanation of the architecture, based on the above system architecture diagram:
 
-### **1. IMU Processing Package**
+### **1. IMU Procesasing Package**
 #### **Purpose**
 - To process raw IMU sensor data and estimate the quadcopter's orientation in real-time.
 

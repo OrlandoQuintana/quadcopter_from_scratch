@@ -1,4 +1,4 @@
-use rclrs::{create_node, Context, Node, RclrsError, Subscription, Publisher, QOS_PROFILE_DEFAULT};
+use rclrs::{create_node, Context, Node, RclrsError, Subscription, Publisher, QOS_PROFILE_DEFAULT, QoSProfile};
 use rust_ekf::EKF;
 use sensor_msgs::msg::Imu;
 use geometry_msgs::msg::{Vector3, Quaternion};
@@ -28,6 +28,11 @@ impl QuaternionPublisherNode {
 
         let trigger = Arc::new((Mutex::new(false), Condvar::new()));
         let trigger_clone = Arc::clone(&trigger);
+
+        //let high_freq_qos = QoSProfile::default()
+        //.reliability(rclrs::QoSReliabilityPolicy::BestEffort)
+        //.durability(rclrs::QoSDurabilityPolicy::Volatile)
+        //.history(rclrs::QoSHistoryPolicy::KeepLast { depth: 1 });
 
         let _subscriber = node.create_subscription::<Imu, _>(
             "/raw_imu", // Subscribes to raw IMU data
@@ -63,6 +68,7 @@ impl QuaternionPublisherNode {
     }
 
     fn data_callback(&self) -> Result<(), RclrsError> {
+        //let start_time = Instant::now();
         if let Some(data) = self.data.lock().unwrap().as_ref() {
             let accel_data = [
                 data.linear_acceleration.x as f64,
@@ -144,6 +150,9 @@ impl QuaternionPublisherNode {
                 //println!("Published Quaternion: w={:.3}, x={:.3}, y={:.3}, z={:.3}", quaternion.w, quaternion.x, quaternion.y, quaternion.z);
             }
         }
+        //let duration = start_time.elapsed();
+        //println!("EKF loop execution time: {} µs", duration.as_micros());
+
         Ok(())
     }
 }
@@ -164,12 +173,16 @@ fn main() -> Result<(), RclrsError> {
             while !*triggered {
                 triggered = cvar.wait(triggered).unwrap();
             }
+            let start_time = Instant::now();
             *triggered = false; // Reset the trigger
 
             // Call the data callback
             if let Err(e) = quaternion_publisher_node_thread.data_callback() {
                 eprintln!("Error in data callback: {:?}", e);
             }
+            let duration = start_time.elapsed();
+            println!("EKF loop execution time: {} µs", duration.as_micros());
+
         }
     });
 

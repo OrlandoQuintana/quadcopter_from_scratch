@@ -440,7 +440,6 @@ dependencies = [
 [[package]]
 name = "rust-ekf"
 version = "0.1.0"
-source = "git+https://github.com/OrlandoQuintana/rust-ekf#9925876c88b8b8fe2d4ed3847195f6b0a0a3172b"
 dependencies = [
  "nalgebra",
 ]
