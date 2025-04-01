@@ -7,7 +7,7 @@ use linux_embedded_hal::SpidevBus;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use biquad::{Biquad, Coefficients, DirectForm1, ToHertz}; // Crate for Butterworth low pass filter
-
+use std::time::{SystemTime, UNIX_EPOCH};
 
 
 /// Struct containing the ROS2 node, publisher, IMU components. a filter parameters
@@ -86,6 +86,18 @@ impl IMUPublisherNode {
     fn publish_data(&mut self) -> Result<(), RclrsError> {
         let mut imu_msg = ImuMsg::default();
 
+
+        // === Timestamp ===
+        let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
+        imu_msg.header = std_msgs::msg::Header {
+            stamp: builtin_interfaces::msg::Time {
+                sec: now.as_secs() as i32,
+                nanosec: now.subsec_nanos(),
+            },
+            frame_id: "imu_link".to_string(),
+            ..Default::default()
+        };        
+
         // Read accelerometer data using read method from the driver
         if let Ok(accel_data) = self.accel.read() {
             // Filter accelerometer data
@@ -114,7 +126,7 @@ impl IMUPublisherNode {
             // Gyroscope Calibration
             // Run the gyroscope for X iterations with the gyroscope completely at rest. take the average
             // reading and subtract from all gyroscope readings to get a calibrated reading
-            imu_msg.angular_velocity.x = (gyro_data[0] - (-0.0007)) as f64; // X Bias
+            imu_msg.angular_velocity.x = (gyro_data[0] - (-0.0007)) as f64; // X Bias -0.0007
             imu_msg.angular_velocity.y = (gyro_data[1] - (0.013)) as f64; // Y Bias
             imu_msg.angular_velocity.z = (gyro_data[2] - (0.006)) as f64; // Z Bias
 /*
@@ -178,7 +190,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
 
                 let duration = start.elapsed();
-                println!("IMU publish loop execution time: {} µs", duration.as_micros());
+                //println!("IMU publish loop execution time: {} µs", duration.as_micros());
 
             } else {
                 // Sleep for the remaining time in the Y ms window

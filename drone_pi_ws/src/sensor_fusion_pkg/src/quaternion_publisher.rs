@@ -8,6 +8,7 @@ use std::{
     thread,
     time::Instant,
 };
+use std::time::{SystemTime, UNIX_EPOCH};
 
 pub struct QuaternionPublisherNode {
     node: Arc<Node>,
@@ -84,7 +85,7 @@ impl QuaternionPublisherNode {
                 elapsed.as_secs_f64() // Convert to seconds as f64
             } else {
                 // Use a default `dt` for the first iteration
-                0.005 // Assume 2 ms (500 Hz)
+                0.001 // Assume 2 ms (500 Hz)
             };
             *last_update_time = Some(Instant::now()); // Update the last callback time
 
@@ -104,6 +105,7 @@ impl QuaternionPublisherNode {
                     data.angular_velocity.x as f64,
                     data.angular_velocity.y as f64,
                     data.angular_velocity.z as f64,
+                    //data.angular_velocity.z as f64,
                 ];
 
 
@@ -120,28 +122,30 @@ impl QuaternionPublisherNode {
                 };
 
                 let gyro_data_ekf = Vector3 {
-                    x: state[4], // ekf filtered gyro x data
-                    y: state[5], // ekf filtered gyro y data
-                    z: state[6], // ekf filtered gyro z data
+                    x: data.angular_velocity.x as f64,
+                    y: data.angular_velocity.y as f64,
+                    z: data.angular_velocity.z as f64,
                 };
 
                 // Create an Imu message
+                let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
                 let imu_msg = Imu {
                     header: std_msgs::msg::Header {
-                        frame_id: "imu_link".to_string(), // Set the appropriate frame ID
                         stamp: builtin_interfaces::msg::Time {
-                            sec: 0,      // Default to zero
-                            nanosec: 0,  // Default to zero
-                        },                    
+                            sec: now.as_secs() as i32,
+                            nanosec: now.subsec_nanos(),
+                        },
+                        frame_id: "imu_link".to_string(),
                         ..Default::default()
                     },
-                    orientation: quaternion.clone(), // Publish quaternion
-                    orientation_covariance: [0.0; 9], // Set to zeros or a meaningful covariance if available
-                    angular_velocity: gyro_data_ekf.clone(), // Gyro data post-EKF
-                    angular_velocity_covariance: [0.0; 9], // Optional: fill with real data
-                    linear_acceleration: data.linear_acceleration.clone(), // Biquad-filtered accelerometer data
-                    linear_acceleration_covariance: [0.0; 9], // Optional: fill with real data
+                    orientation: quaternion.clone(),
+                    orientation_covariance: [0.0; 9],
+                    angular_velocity: gyro_data_ekf.clone(),
+                    angular_velocity_covariance: [0.0; 9],
+                    linear_acceleration: data.linear_acceleration.clone(),
+                    linear_acceleration_covariance: [0.0; 9],
                 };
+
 
                 // Publish the message
                 self._publisher.publish(&imu_msg)?;
@@ -181,7 +185,7 @@ fn main() -> Result<(), RclrsError> {
                 eprintln!("Error in data callback: {:?}", e);
             }
             let duration = start_time.elapsed();
-            println!("EKF loop execution time: {} µs", duration.as_micros());
+            //println!("EKF loop execution time: {} µs", duration.as_micros());
 
         }
     });
